@@ -123,6 +123,7 @@ export default function Matches() {
       legsToWin: Math.max(newPlayer1Legs, newPlayer2Legs),
       isRanked: newIsRanked,
       highestCheckout: 0,
+      playerCount: 2,
     });
 
     setShowAddMatch(false);
@@ -157,85 +158,104 @@ export default function Matches() {
           </div>
         ) : (
           <div className="space-y-3">
-            {matches.map((match) => (
-              <div key={match.id} className="bg-[#2a2a2a] rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-500 text-sm">{match.gameMode}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      match.isRanked ? "bg-[#4ade80]/20 text-[#4ade80]" : "bg-[#f5a623]/20 text-[#f5a623]"
-                    }`}>
-                      {match.isRanked ? "Ranked" : "Practice"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-500 text-sm">{formatDate(match.playedAt)}</span>
-                    <button
-                      onClick={() => openEditModal(match)}
-                      className="text-slate-400 hover:text-white p-1"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
+            {matches.map((match) => {
+              const isMultiPlayer = match.playerCount > 2;
+              const otherPlayersCount = isMultiPlayer ? match.playerCount - 1 : 0;
+              // For multi-player: player1 is winner, player2Name contains all other players
+              const player2Display = isMultiPlayer
+                ? `${match.player2Name.split(', ')[0]}+${otherPlayersCount - 1}`
+                : match.player2Name;
 
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
+              return (
+                <div key={match.id} className="bg-[#2a2a2a] rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span
-                        className={`font-semibold ${
-                          match.winnerId === match.player1Id ? "text-white" : "text-slate-400"
-                        }`}
-                      >
-                        {match.player1Name}
+                      <span className="text-slate-500 text-sm">{match.gameMode}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        match.isRanked ? "bg-[#4ade80]/20 text-[#4ade80]" : "bg-[#f5a623]/20 text-[#f5a623]"
+                      }`}>
+                        {match.isRanked ? "Ranked" : "Practice"}
                       </span>
-                      {match.winnerId === match.player1Id && (
-                        <span className="text-xs text-[#4ade80]">WIN</span>
+                      {isMultiPlayer && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-slate-600/30 text-slate-400">
+                          {match.playerCount} players
+                        </span>
                       )}
                     </div>
-                    {match.isRanked && (
-                      <div className="text-xs text-slate-500 mt-1">
-                        Avg: {match.player1Avg.toFixed(1)} •{" "}
-                        <span className={match.player1EloChange >= 0 ? "text-green-400" : "text-red-400"}>
-                          {match.player1EloChange >= 0 ? "+" : ""}{match.player1EloChange}
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500 text-sm">{formatDate(match.playedAt)}</span>
+                      <button
+                        onClick={() => openEditModal(match)}
+                        className="text-slate-400 hover:text-white p-1"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`font-semibold ${
+                            match.winnerId === match.player1Id ? "text-white" : "text-slate-400"
+                          }`}
+                        >
+                          {match.player1Name}
+                        </span>
+                        {match.winnerId === match.player1Id && (
+                          <span className="text-xs text-[#4ade80]">WIN</span>
+                        )}
+                      </div>
+                      {match.isRanked && (
+                        <div className="text-xs text-slate-500 mt-1">
+                          Avg: {match.player1Avg.toFixed(1)} •{" "}
+                          <span className={match.player1EloChange >= 0 ? "text-green-400" : "text-red-400"}>
+                            {match.player1EloChange >= 0 ? "+" : ""}{match.player1EloChange}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="px-4">
+                      <span className="text-2xl font-bold text-white">
+                        {match.player1Legs} - {match.player2Legs}
+                      </span>
+                    </div>
+
+                    <div className="flex-1 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {match.winnerId === match.player2Id && (
+                          <span className="text-xs text-[#4ade80]">WIN</span>
+                        )}
+                        <span
+                          className={`font-semibold ${
+                            match.winnerId === match.player2Id ? "text-white" : "text-slate-400"
+                          }`}
+                        >
+                          {player2Display}
                         </span>
                       </div>
-                    )}
-                  </div>
-
-                  <div className="px-4">
-                    <span className="text-2xl font-bold text-white">
-                      {match.player1Legs} - {match.player2Legs}
-                    </span>
-                  </div>
-
-                  <div className="flex-1 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {match.winnerId === match.player2Id && (
-                        <span className="text-xs text-[#4ade80]">WIN</span>
+                      {match.isRanked && (
+                        <div className="text-xs text-slate-500 mt-1">
+                          <span className={match.player2EloChange >= 0 ? "text-green-400" : "text-red-400"}>
+                            {match.player2EloChange >= 0 ? "+" : ""}{match.player2EloChange}
+                          </span>{" "}
+                          • Avg: {match.player2Avg.toFixed(1)}
+                        </div>
                       )}
-                      <span
-                        className={`font-semibold ${
-                          match.winnerId === match.player2Id ? "text-white" : "text-slate-400"
-                        }`}
-                      >
-                        {match.player2Name}
-                      </span>
+                      {isMultiPlayer && match.allPlayerNames && (
+                        <div className="text-xs text-slate-500 mt-1">
+                          All: {match.allPlayerNames}
+                        </div>
+                      )}
                     </div>
-                    {match.isRanked && (
-                      <div className="text-xs text-slate-500 mt-1">
-                        <span className={match.player2EloChange >= 0 ? "text-green-400" : "text-red-400"}>
-                          {match.player2EloChange >= 0 ? "+" : ""}{match.player2EloChange}
-                        </span>{" "}
-                        • Avg: {match.player2Avg.toFixed(1)}
-                      </div>
-                    )}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

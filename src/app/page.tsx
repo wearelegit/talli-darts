@@ -103,48 +103,63 @@ export default function Home() {
           {recentMatches.length === 0 ? (
             <p className="text-slate-500 text-center py-4">No matches yet</p>
           ) : (
-            recentMatches.map((match) => (
-              <div
-                key={match.id}
-                className="px-4 py-3 border-b border-[#333] last:border-b-0"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={
-                        match.winnerId === match.player1Id
-                          ? "text-white font-semibold"
-                          : "text-slate-400"
-                      }
-                    >
-                      {match.player1Name}
-                    </span>
-                    <span className="text-slate-500">vs</span>
-                    <span
-                      className={
-                        match.winnerId === match.player2Id
-                          ? "text-white font-semibold"
-                          : "text-slate-400"
-                      }
-                    >
-                      {match.player2Name}
+            recentMatches.map((match) => {
+              const isMultiPlayer = match.playerCount > 2;
+              const otherPlayersCount = isMultiPlayer ? match.playerCount - 1 : 0;
+              // For multi-player: player1 is winner, player2Name contains all other players
+              const player2Display = isMultiPlayer
+                ? `${match.player2Name.split(', ')[0]}+${otherPlayersCount - 1}`
+                : match.player2Name;
+
+              return (
+                <div
+                  key={match.id}
+                  className="px-4 py-3 border-b border-[#333] last:border-b-0"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={
+                          match.winnerId === match.player1Id
+                            ? "text-white font-semibold"
+                            : "text-slate-400"
+                        }
+                      >
+                        {match.player1Name}
+                      </span>
+                      <span className="text-slate-500">vs</span>
+                      <span
+                        className={
+                          match.winnerId === match.player2Id
+                            ? "text-white font-semibold"
+                            : "text-slate-400"
+                        }
+                      >
+                        {player2Display}
+                      </span>
+                    </div>
+                    <span className="text-slate-500 text-sm">
+                      {match.player1Legs} - {match.player2Legs}
                     </span>
                   </div>
-                  <span className="text-slate-500 text-sm">
-                    {match.player1Legs} - {match.player2Legs}
-                  </span>
+                  <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                    <span>{match.gameMode}</span>
+                    <span>•</span>
+                    <span className={match.isRanked ? "text-[#4ade80]" : "text-[#f5a623]"}>
+                      {match.isRanked ? "Ranked" : "Practice"}
+                    </span>
+                    {isMultiPlayer && (
+                      <>
+                        <span>•</span>
+                        <span className="text-slate-400">{match.playerCount} players</span>
+                      </>
+                    )}
+                    <span>•</span>
+                    <span>{new Date(match.playedAt).toLocaleDateString()}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
-                  <span>{match.gameMode}</span>
-                  <span>•</span>
-                  <span className={match.isRanked ? "text-[#4ade80]" : "text-[#f5a623]"}>
-                    {match.isRanked ? "Ranked" : "Practice"}
-                  </span>
-                  <span>•</span>
-                  <span>{new Date(match.playedAt).toLocaleDateString()}</span>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

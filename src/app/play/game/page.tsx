@@ -231,6 +231,7 @@ function GameContent() {
       player1OneEighties: game.players[0].oneEighties,
       player2OneEighties: game.players[1].oneEighties,
       highestCheckout: 0,
+      playerCount: 2,
     });
 
     setGame((prev) => prev ? { ...prev, matchSaved: true } : null);
@@ -240,6 +241,7 @@ function GameContent() {
     if (game.matchSaved) return;
 
     const winner = game.players[winnerIndex];
+    const allPlayerNames = game.players.map(p => p.name).join(', ');
 
     if (game.players.length === 2) {
       await saveMatch({
@@ -261,19 +263,21 @@ function GameContent() {
         player1OneEighties: game.players[0].oneEighties,
         player2OneEighties: game.players[1].oneEighties,
         highestCheckout: 0,
+        playerCount: 2,
       });
     } else {
-      // Multi-player match
+      // Multi-player match - store all player names
+      const otherPlayers = game.players.filter((_, i) => i !== winnerIndex);
       await saveMatch({
-        player1Id: game.players[0].id,
-        player2Id: game.players[1].id,
-        player1Name: game.players[0].name,
-        player2Name: game.players[1].name,
+        player1Id: winner.id,
+        player2Id: otherPlayers[0].id,
+        player1Name: winner.name,
+        player2Name: otherPlayers.map(p => p.name).join(', '),
         winnerId: winner.id,
         winnerName: winner.name,
         gameMode: game.gameMode,
-        player1Legs: finalLegs[0],
-        player2Legs: finalLegs[1],
+        player1Legs: finalLegs[winnerIndex],
+        player2Legs: 0,
         legsToWin: game.legsToWin,
         isRanked: false,
         player1EloChange: 0,
@@ -283,6 +287,8 @@ function GameContent() {
         player1OneEighties: 0,
         player2OneEighties: 0,
         highestCheckout: 0,
+        playerCount: game.players.length,
+        allPlayerNames: allPlayerNames,
       });
     }
 

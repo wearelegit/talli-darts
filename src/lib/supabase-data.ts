@@ -46,6 +46,8 @@ interface DbMatch {
   is_ranked: boolean;
   highest_checkout: number;
   played_at: string;
+  player_count: number;
+  all_player_names: string | null;
 }
 
 // Player type that matches our app's interface
@@ -95,6 +97,8 @@ export interface MatchResult {
   isRanked: boolean;
   highestCheckout: number;
   playedAt: string;
+  playerCount: number; // Number of players (2 for 1v1, more for multi-player)
+  allPlayerNames?: string; // Comma-separated names for multi-player matches
 }
 
 // Convert DB player to app player
@@ -174,6 +178,8 @@ function dbToMatch(db: DbMatch): MatchResult {
     isRanked: db.is_ranked,
     highestCheckout: db.highest_checkout,
     playedAt: db.played_at,
+    playerCount: db.player_count || 2,
+    allPlayerNames: db.all_player_names || undefined,
   };
 }
 
@@ -200,6 +206,8 @@ function matchToDb(match: Partial<MatchResult> & { id: string }): Partial<DbMatc
     is_ranked: match.isRanked ?? true,
     highest_checkout: match.highestCheckout || 0,
     played_at: match.playedAt || new Date().toISOString(),
+    player_count: match.playerCount || 2,
+    all_player_names: match.allPlayerNames || null,
   };
 }
 

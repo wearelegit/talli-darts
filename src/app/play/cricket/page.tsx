@@ -192,6 +192,7 @@ function CricketGameContent() {
       legsToWin: 1,
       isRanked: false,
       highestCheckout: 0,
+      playerCount: cricketPlayers.length,
     });
 
     router.push("/");
