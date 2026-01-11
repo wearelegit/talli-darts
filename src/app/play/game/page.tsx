@@ -154,64 +154,60 @@ function GameContent() {
     const winner = game.players[winnerIndex];
     const loser = game.players[winnerIndex === 0 ? 1 : 0];
 
-    // Calculate new ELOs using the proper formula
-    const eloResult = calculateMatchElo(winner.elo, loser.elo, true);
-    const winnerNewElo = eloResult.newEloA;
-    const loserNewElo = eloResult.newEloB;
-    const winnerEloChange = eloResult.changeA;
-    const loserEloChange = eloResult.changeB;
-
-    // Update player stats
+    // Get stored players to access their current ELO values
     const winnerStored = getPlayer(winner.id);
     const loserStored = getPlayer(loser.id);
 
-    if (winnerStored) {
-      const updates: Record<string, number> = {
-        wins: winnerStored.wins + 1,
-        legsWon: winnerStored.legsWon + winner.legsWon,
-        legsLost: winnerStored.legsLost + loser.legsWon,
-        oneEighties: winnerStored.oneEighties + winner.oneEighties,
-      };
+    if (!winnerStored || !loserStored) return;
 
-      if (mode === "301") {
-        updates.elo301 = winnerNewElo;
-        updates.wins301 = winnerStored.wins301 + 1;
-      } else {
-        updates.elo501 = winnerNewElo;
-        updates.wins501 = winnerStored.wins501 + 1;
-      }
+    // Calculate game-specific ELO changes (301 or 501)
+    const gameEloResult = calculateMatchElo(winner.elo, loser.elo, true);
 
-      // Update overall ELO as average of 301 and 501 (2 decimal places)
-      const new301 = mode === "301" ? winnerNewElo : winnerStored.elo301;
-      const new501 = mode === "501" ? winnerNewElo : winnerStored.elo501;
-      updates.elo = roundTo2((new301 + new501) / 2);
+    // Calculate overall ELO changes independently using overall ELO values
+    const overallEloResult = calculateMatchElo(winnerStored.elo, loserStored.elo, true);
 
-      updatePlayer(winner.id, updates);
+    const winnerEloChange = overallEloResult.changeA;
+    const loserEloChange = overallEloResult.changeB;
+
+    // Update winner stats
+    const winnerUpdates: Record<string, number> = {
+      wins: winnerStored.wins + 1,
+      legsWon: winnerStored.legsWon + winner.legsWon,
+      legsLost: winnerStored.legsLost + loser.legsWon,
+      oneEighties: winnerStored.oneEighties + winner.oneEighties,
+      // Overall ELO is calculated independently
+      elo: overallEloResult.newEloA,
+    };
+
+    if (mode === "301") {
+      winnerUpdates.elo301 = gameEloResult.newEloA;
+      winnerUpdates.wins301 = winnerStored.wins301 + 1;
+    } else {
+      winnerUpdates.elo501 = gameEloResult.newEloA;
+      winnerUpdates.wins501 = winnerStored.wins501 + 1;
     }
 
-    if (loserStored) {
-      const updates: Record<string, number> = {
-        losses: loserStored.losses + 1,
-        legsWon: loserStored.legsWon + loser.legsWon,
-        legsLost: loserStored.legsLost + winner.legsWon,
-        oneEighties: loserStored.oneEighties + loser.oneEighties,
-      };
+    updatePlayer(winner.id, winnerUpdates);
 
-      if (mode === "301") {
-        updates.elo301 = loserNewElo;
-        updates.losses301 = loserStored.losses301 + 1;
-      } else {
-        updates.elo501 = loserNewElo;
-        updates.losses501 = loserStored.losses501 + 1;
-      }
+    // Update loser stats
+    const loserUpdates: Record<string, number> = {
+      losses: loserStored.losses + 1,
+      legsWon: loserStored.legsWon + loser.legsWon,
+      legsLost: loserStored.legsLost + winner.legsWon,
+      oneEighties: loserStored.oneEighties + loser.oneEighties,
+      // Overall ELO is calculated independently
+      elo: overallEloResult.newEloB,
+    };
 
-      // Update overall ELO as average of 301 and 501 (2 decimal places)
-      const new301 = mode === "301" ? loserNewElo : loserStored.elo301;
-      const new501 = mode === "501" ? loserNewElo : loserStored.elo501;
-      updates.elo = roundTo2((new301 + new501) / 2);
-
-      updatePlayer(loser.id, updates);
+    if (mode === "301") {
+      loserUpdates.elo301 = gameEloResult.newEloB;
+      loserUpdates.losses301 = loserStored.losses301 + 1;
+    } else {
+      loserUpdates.elo501 = gameEloResult.newEloB;
+      loserUpdates.losses501 = loserStored.losses501 + 1;
     }
+
+    updatePlayer(loser.id, loserUpdates);
 
     // Save match
     saveMatch({
