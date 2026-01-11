@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { getPlayers, resetAllStats, type Player } from "@/lib/players";
-import { getMatches, clearMatches, type MatchResult } from "@/lib/matches";
+import { useState, useMemo } from "react";
+import { useData } from "@/context/DataContext";
+import type { Player } from "@/lib/supabase-data";
 
 interface Stats {
   totalMatches: number;
@@ -16,21 +16,10 @@ interface Stats {
 }
 
 export default function StatsPage() {
-  const [stats, setStats] = useState<Stats>({
-    totalMatches: 0,
-    totalLegs: 0,
-    total180s: 0,
-    mostWins: null,
-    highest180s: null,
-    highestElo: null,
-    biggestRivalry: null,
-  });
+  const { players, matches, loading, resetAllStats } = useData();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  const loadStats = () => {
-    const players = getPlayers();
-    const matches = getMatches();
-
+  const stats: Stats = useMemo(() => {
     // Calculate stats
     const totalMatches = matches.length;
     const totalLegs = matches.reduce((sum, m) => sum + m.player1Legs + m.player2Legs, 0);
@@ -48,7 +37,7 @@ export default function StatsPage() {
       rivalries[key] = (rivalries[key] || 0) + 1;
     });
 
-    let biggestRivalry = null;
+    let biggestRivalry: { player1: string; player2: string; matches: number } | null = null;
     let maxMatches = 0;
     Object.entries(rivalries).forEach(([key, count]) => {
       if (count > maxMatches) {
@@ -58,7 +47,7 @@ export default function StatsPage() {
       }
     });
 
-    setStats({
+    return {
       totalMatches,
       totalLegs,
       total180s,
@@ -66,18 +55,20 @@ export default function StatsPage() {
       highest180s: sortedBy180s[0]?.oneEighties > 0 ? sortedBy180s[0] : null,
       highestElo: sortedByElo[0] || null,
       biggestRivalry: maxMatches > 1 ? biggestRivalry : null,
-    });
-  };
+    };
+  }, [players, matches]);
 
-  useEffect(() => {
-    loadStats();
-  }, []);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+        <p className="text-white">Loading...</p>
+      </div>
+    );
+  }
 
-  const handleResetAll = () => {
-    resetAllStats();
-    clearMatches();
+  const handleResetAll = async () => {
+    await resetAllStats();
     setShowResetConfirm(false);
-    loadStats();
   };
 
   const StatCard = ({ label, value, subtext }: { label: string; value: string | number; subtext?: string }) => (

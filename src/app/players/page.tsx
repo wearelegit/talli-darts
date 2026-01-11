@@ -2,38 +2,38 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { getTalliPlayers, getVisitorPlayers, addPlayer, deletePlayer, type Player } from "@/lib/players";
+import { useState } from "react";
+import { useData } from "@/context/DataContext";
+import type { Player } from "@/lib/supabase-data";
 
 export default function Players() {
   const router = useRouter();
-  const [talliPlayers, setTalliPlayers] = useState<Player[]>([]);
-  const [visitorPlayers, setVisitorPlayers] = useState<Player[]>([]);
+  const { players, loading, addPlayer, deletePlayer } = useData();
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState("");
   const [showConfirmDelete, setShowConfirmDelete] = useState<Player | null>(null);
 
-  useEffect(() => {
-    loadPlayers();
-  }, []);
+  const talliPlayers = players.filter(p => p.group === "talli").sort((a, b) => b.elo - a.elo);
+  const visitorPlayers = players.filter(p => p.group === "visitor").sort((a, b) => b.elo - a.elo);
 
-  const loadPlayers = () => {
-    setTalliPlayers(getTalliPlayers().sort((a, b) => b.elo - a.elo));
-    setVisitorPlayers(getVisitorPlayers().sort((a, b) => b.elo - a.elo));
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+        <p className="text-white">Loading...</p>
+      </div>
+    );
+  }
 
-  const handleAddPlayer = () => {
+  const handleAddPlayer = async () => {
     if (!newPlayerName.trim()) return;
-    addPlayer(newPlayerName.trim(), "visitor");
+    await addPlayer(newPlayerName.trim(), "visitor");
     setNewPlayerName("");
     setShowAddPlayer(false);
-    loadPlayers();
   };
 
-  const handleDeletePlayer = (player: Player) => {
-    deletePlayer(player.id);
+  const handleDeletePlayer = async (player: Player) => {
+    await deletePlayer(player.id);
     setShowConfirmDelete(null);
-    loadPlayers();
   };
 
   const PlayerCard = ({ player, canDelete }: { player: Player; canDelete: boolean }) => (

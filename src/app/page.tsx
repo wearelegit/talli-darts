@@ -1,20 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { getPlayers, type Player } from "@/lib/players";
-import { getRecentMatches, type MatchResult } from "@/lib/matches";
+import { useData } from "@/context/DataContext";
 
 export default function Home() {
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [recentMatches, setRecentMatches] = useState<MatchResult[]>([]);
+  const { players, matches, loading } = useData();
 
-  useEffect(() => {
-    setPlayers(getPlayers().sort((a, b) => b.elo - a.elo));
-    setRecentMatches(getRecentMatches(5));
-  }, []);
+  const topPlayers = [...players].sort((a, b) => b.elo - a.elo).slice(0, 5);
+  const recentMatches = matches.slice(0, 5);
 
-  const topPlayers = players.slice(0, 5);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+        <p className="text-white">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#1a1a1a] p-4">

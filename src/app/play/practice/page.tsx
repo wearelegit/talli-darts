@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getPlayers, addPlayer, type Player } from "@/lib/players";
+import { useData } from "@/context/DataContext";
+import type { Player } from "@/lib/supabase-data";
 
 export default function PracticeSetup() {
   const router = useRouter();
-  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
+  const { players, loading, addPlayer } = useData();
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
   const [gameMode, setGameMode] = useState<"301" | "501" | "cricket">("501");
   const [legsToWin, setLegsToWin] = useState(3);
@@ -16,17 +17,17 @@ export default function PracticeSetup() {
   const [showAddPlayer, setShowAddPlayer] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState("");
 
-  useEffect(() => {
-    loadPlayers();
-  }, []);
-
-  const loadPlayers = () => {
-    const players = getPlayers().sort((a, b) => a.name.localeCompare(b.name));
-    setAllPlayers(players);
-  };
-
+  const allPlayers = [...players].sort((a, b) => a.name.localeCompare(b.name));
   const talliPlayers = allPlayers.filter(p => p.group === "talli");
   const visitorPlayers = allPlayers.filter(p => p.group === "visitor");
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+        <p className="text-white">Loading...</p>
+      </div>
+    );
+  }
 
   const canStart = selectedPlayers.length >= 2 && legsToWin > 0;
 
@@ -55,12 +56,11 @@ export default function PracticeSetup() {
     }
   };
 
-  const handleAddPlayer = () => {
+  const handleAddPlayer = async () => {
     if (!newPlayerName.trim()) return;
-    addPlayer(newPlayerName.trim(), "visitor");
+    await addPlayer(newPlayerName.trim(), "visitor");
     setNewPlayerName("");
     setShowAddPlayer(false);
-    loadPlayers();
   };
 
   const togglePlayer = (player: Player) => {

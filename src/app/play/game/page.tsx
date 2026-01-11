@@ -4,8 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getCheckoutSuggestion } from "@/lib/darts";
 import { calculateMatchElo } from "@/lib/elo";
-import { getPlayer, updatePlayer } from "@/lib/players";
-import { saveMatch } from "@/lib/matches";
+import { useData } from "@/context/DataContext";
 
 interface GamePlayer {
   id: string;
@@ -38,6 +37,7 @@ interface GameState {
 function GameContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { getPlayer, updatePlayer, saveMatch, loading: dataLoading } = useData();
 
   // Support both 1v1 (p1, p2) and multi-player (players)
   const p1Id = searchParams.get("p1");
@@ -65,6 +65,8 @@ function GameContent() {
   const [editThrowValue, setEditThrowValue] = useState("");
 
   useEffect(() => {
+    if (dataLoading) return;
+
     let playerIds: string[] = [];
 
     if (playersParam) {
@@ -78,7 +80,7 @@ function GameContent() {
       return;
     }
 
-    const players: GamePlayer[] = playerIds.map(id => {
+    const gamePlayers: GamePlayer[] = playerIds.map(id => {
       const p = getPlayer(id);
       if (!p) return null;
       return {
@@ -93,13 +95,13 @@ function GameContent() {
       };
     }).filter(Boolean) as GamePlayer[];
 
-    if (players.length < 2) {
+    if (gamePlayers.length < 2) {
       router.push("/");
       return;
     }
 
     setGame({
-      players,
+      players: gamePlayers,
       currentPlayerIndex: 0,
       startingScore,
       legsToWin,
@@ -112,7 +114,7 @@ function GameContent() {
       pendingLegWin: null,
       currentLeg: 1,
     });
-  }, [p1Id, p2Id, playersParam, mode, legsToWin, isRanked, startingScore, router]);
+  }, [p1Id, p2Id, playersParam, mode, legsToWin, isRanked, startingScore, router, getPlayer, dataLoading]);
 
   if (!game) {
     return (
@@ -148,7 +150,7 @@ function GameContent() {
   // Helper to round to 2 decimal places
   const roundTo2 = (n: number) => Math.round(n * 100) / 100;
 
-  const saveMatchResult = (winnerIndex: number, winnerLegs: number, loserLegs: number) => {
+  const saveMatchResult = async (winnerIndex: number, winnerLegs: number, loserLegs: number) => {
     if (game.matchSaved || !game.isRanked || game.players.length !== 2) return;
 
     const winner = game.players[winnerIndex];
@@ -187,7 +189,7 @@ function GameContent() {
       winnerUpdates.wins501 = winnerStored.wins501 + 1;
     }
 
-    updatePlayer(winner.id, winnerUpdates);
+    await updatePlayer(winner.id, winnerUpdates);
 
     // Update loser stats
     const loserUpdates: Record<string, number> = {
@@ -207,10 +209,10 @@ function GameContent() {
       loserUpdates.losses501 = loserStored.losses501 + 1;
     }
 
-    updatePlayer(loser.id, loserUpdates);
+    await updatePlayer(loser.id, loserUpdates);
 
     // Save match
-    saveMatch({
+    await saveMatch({
       player1Id: game.players[0].id,
       player2Id: game.players[1].id,
       player1Name: game.players[0].name,
@@ -234,13 +236,13 @@ function GameContent() {
     setGame((prev) => prev ? { ...prev, matchSaved: true } : null);
   };
 
-  const savePracticeMatch = (winnerIndex: number, finalLegs: number[]) => {
+  const savePracticeMatch = async (winnerIndex: number, finalLegs: number[]) => {
     if (game.matchSaved) return;
 
     const winner = game.players[winnerIndex];
 
     if (game.players.length === 2) {
-      saveMatch({
+      await saveMatch({
         player1Id: game.players[0].id,
         player2Id: game.players[1].id,
         player1Name: game.players[0].name,
@@ -258,12 +260,11 @@ function GameContent() {
         player2Avg: parseFloat(getAverage(game.players[1])),
         player1OneEighties: game.players[0].oneEighties,
         player2OneEighties: game.players[1].oneEighties,
-        players: game.players.map((p, i) => ({ id: p.id, name: p.name, legs: finalLegs[i], avg: parseFloat(getAverage(p)) })),
         highestCheckout: 0,
       });
     } else {
       // Multi-player match
-      saveMatch({
+      await saveMatch({
         player1Id: game.players[0].id,
         player2Id: game.players[1].id,
         player1Name: game.players[0].name,
@@ -281,7 +282,6 @@ function GameContent() {
         player2Avg: 0,
         player1OneEighties: 0,
         player2OneEighties: 0,
-        players: game.players.map((p, i) => ({ id: p.id, name: p.name, legs: finalLegs[i], avg: parseFloat(getAverage(p)) })),
         highestCheckout: 0,
       });
     }

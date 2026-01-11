@@ -3,11 +3,13 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getPlayer, updatePlayer, type Player } from "@/lib/players";
+import { useData } from "@/context/DataContext";
+import type { Player } from "@/lib/supabase-data";
 
 export default function EditPlayer({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
+  const { getPlayer, updatePlayer, loading } = useData();
   const [player, setPlayer] = useState<Player | null>(null);
   const [name, setName] = useState("");
   const [club, setClub] = useState("");
@@ -26,13 +28,13 @@ export default function EditPlayer({ params }: { params: Promise<{ id: string }>
       setFavoritePlayer(p.favoritePlayer || "");
       setDartsModel(p.dartsModel || "");
     }
-  }, [id]);
+  }, [id, getPlayer, loading]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!player || !name.trim()) return;
 
     setIsSaving(true);
-    updatePlayer(player.id, {
+    await updatePlayer(player.id, {
       name: name.trim(),
       club: club.trim(),
       entranceSong: entranceSong.trim(),

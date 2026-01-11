@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { getMatches, updateMatch, deleteMatchAndRevertStats, addManualMatch, type MatchResult } from "@/lib/matches";
-import { getPlayers, getPlayer, updatePlayer, type Player } from "@/lib/players";
+import { useState } from "react";
+import { useData } from "@/context/DataContext";
+import type { MatchResult, Player } from "@/lib/supabase-data";
 
 export default function Matches() {
-  const [matches, setMatches] = useState<MatchResult[]>([]);
-  const [players, setPlayers] = useState<Player[]>([]);
+  const { matches, players, loading, updateMatch, deleteMatchAndRevertStats, saveMatch } = useData();
   const [editingMatch, setEditingMatch] = useState<MatchResult | null>(null);
   const [showAddMatch, setShowAddMatch] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState<MatchResult | null>(null);
@@ -25,14 +24,15 @@ export default function Matches() {
   const [newGameMode, setNewGameMode] = useState<"301" | "501" | "cricket">("501");
   const [newIsRanked, setNewIsRanked] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const sortedPlayers = [...players].sort((a, b) => a.name.localeCompare(b.name));
 
-  const loadData = () => {
-    setMatches(getMatches());
-    setPlayers(getPlayers().sort((a, b) => a.name.localeCompare(b.name)));
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+        <p className="text-white">Loading...</p>
+      </div>
+    );
+  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -58,14 +58,14 @@ export default function Matches() {
     setEditWinnerId(match.winnerId);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingMatch) return;
 
     const winner = editWinnerId === editingMatch.player1Id
       ? { id: editingMatch.player1Id, name: editingMatch.player1Name }
       : { id: editingMatch.player2Id, name: editingMatch.player2Name };
 
-    updateMatch(editingMatch.id, {
+    await updateMatch(editingMatch.id, {
       player1Legs: editPlayer1Legs,
       player2Legs: editPlayer2Legs,
       winnerId: winner.id,
@@ -73,16 +73,14 @@ export default function Matches() {
     });
 
     setEditingMatch(null);
-    loadData();
   };
 
-  const handleDeleteMatch = () => {
+  const handleDeleteMatch = async () => {
     if (!showConfirmDelete) return;
     // Delete match and revert all related stats (ELO, wins, losses, legs, 180s)
-    deleteMatchAndRevertStats(showConfirmDelete.id, getPlayer, updatePlayer);
+    await deleteMatchAndRevertStats(showConfirmDelete.id);
     setShowConfirmDelete(null);
     setEditingMatch(null);
-    loadData();
   };
 
   const openAddModal = () => {
@@ -95,18 +93,18 @@ export default function Matches() {
     setNewIsRanked(false);
   };
 
-  const handleAddMatch = () => {
+  const handleAddMatch = async () => {
     if (!newPlayer1Id || !newPlayer2Id || newPlayer1Id === newPlayer2Id) return;
 
-    const player1 = players.find(p => p.id === newPlayer1Id);
-    const player2 = players.find(p => p.id === newPlayer2Id);
+    const player1 = sortedPlayers.find(p => p.id === newPlayer1Id);
+    const player2 = sortedPlayers.find(p => p.id === newPlayer2Id);
     if (!player1 || !player2) return;
 
     // Determine winner based on legs
     const winnerId = newPlayer1Legs > newPlayer2Legs ? player1.id : player2.id;
     const winnerName = newPlayer1Legs > newPlayer2Legs ? player1.name : player2.name;
 
-    addManualMatch({
+    await saveMatch({
       player1Id: player1.id,
       player2Id: player2.id,
       player1Name: player1.name,
@@ -128,7 +126,6 @@ export default function Matches() {
     });
 
     setShowAddMatch(false);
-    loadData();
   };
 
   const canAddMatch = newPlayer1Id && newPlayer2Id && newPlayer1Id !== newPlayer2Id && (newPlayer1Legs > 0 || newPlayer2Legs > 0);
@@ -346,7 +343,7 @@ export default function Matches() {
                   className="w-full px-4 py-3 bg-[#1a1a1a] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#4ade80]"
                 >
                   <option value="">Select player</option>
-                  {players.map(p => (
+                  {sortedPlayers.map(p => (
                     <option key={p.id} value={p.id} disabled={p.id === newPlayer2Id}>
                       {p.name}
                     </option>
@@ -363,7 +360,7 @@ export default function Matches() {
                   className="w-full px-4 py-3 bg-[#1a1a1a] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#4ade80]"
                 >
                   <option value="">Select player</option>
-                  {players.map(p => (
+                  {sortedPlayers.map(p => (
                     <option key={p.id} value={p.id} disabled={p.id === newPlayer1Id}>
                       {p.name}
                     </option>
@@ -377,7 +374,7 @@ export default function Matches() {
                 <div className="flex items-center gap-3">
                   <div className="flex-1 text-center">
                     <p className="text-white text-sm mb-1">
-                      {newPlayer1Id ? players.find(p => p.id === newPlayer1Id)?.name : "P1"}
+                      {newPlayer1Id ? sortedPlayers.find(p => p.id === newPlayer1Id)?.name : "P1"}
                     </p>
                     <input
                       type="number"
@@ -390,7 +387,7 @@ export default function Matches() {
                   <span className="text-slate-500 text-2xl">-</span>
                   <div className="flex-1 text-center">
                     <p className="text-white text-sm mb-1">
-                      {newPlayer2Id ? players.find(p => p.id === newPlayer2Id)?.name : "P2"}
+                      {newPlayer2Id ? sortedPlayers.find(p => p.id === newPlayer2Id)?.name : "P2"}
                     </p>
                     <input
                       type="number"

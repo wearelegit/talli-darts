@@ -1,18 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { getPlayers, type Player } from "@/lib/players";
+import { useState } from "react";
+import { useData } from "@/context/DataContext";
+import type { Player } from "@/lib/supabase-data";
 
 type RankingType = "overall" | "301" | "501";
 
 export default function Leaderboard() {
-  const [players, setPlayers] = useState<Player[]>([]);
+  const { players, loading } = useData();
   const [rankingType, setRankingType] = useState<RankingType>("overall");
 
-  useEffect(() => {
-    setPlayers(getPlayers());
-  }, []);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+        <p className="text-white">Loading...</p>
+      </div>
+    );
+  }
 
   const getSortedPlayers = () => {
     const sorted = [...players];

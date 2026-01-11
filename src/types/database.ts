@@ -9,266 +9,143 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      users: {
+      players: {
         Row: {
           id: string
-          email: string
-          display_name: string
-          avatar_url: string | null
+          name: string
+          group: 'talli' | 'visitor'
           elo: number
+          elo301: number
+          elo501: number
+          wins: number
+          losses: number
+          wins301: number
+          losses301: number
+          wins501: number
+          losses501: number
+          legs_won: number
+          legs_lost: number
+          one_eighties: number
+          highest_checkout: number
+          club: string
+          entrance_song: string
+          favorite_player: string
+          darts_model: string
           created_at: string
-          updated_at: string
         }
         Insert: {
           id: string
-          email: string
-          display_name: string
-          avatar_url?: string | null
+          name: string
+          group?: 'talli' | 'visitor'
           elo?: number
+          elo301?: number
+          elo501?: number
+          wins?: number
+          losses?: number
+          wins301?: number
+          losses301?: number
+          wins501?: number
+          losses501?: number
+          legs_won?: number
+          legs_lost?: number
+          one_eighties?: number
+          highest_checkout?: number
+          club?: string
+          entrance_song?: string
+          favorite_player?: string
+          darts_model?: string
           created_at?: string
-          updated_at?: string
         }
         Update: {
           id?: string
-          email?: string
-          display_name?: string
-          avatar_url?: string | null
+          name?: string
+          group?: 'talli' | 'visitor'
           elo?: number
+          elo301?: number
+          elo501?: number
+          wins?: number
+          losses?: number
+          wins301?: number
+          losses301?: number
+          wins501?: number
+          losses501?: number
+          legs_won?: number
+          legs_lost?: number
+          one_eighties?: number
+          highest_checkout?: number
+          club?: string
+          entrance_song?: string
+          favorite_player?: string
+          darts_model?: string
           created_at?: string
-          updated_at?: string
         }
       }
       matches: {
         Row: {
           id: string
-          game_mode: '301' | '501' | 'practice'
+          player1_id: string
+          player2_id: string
+          player1_name: string
+          player2_name: string
+          winner_id: string
+          winner_name: string
+          player1_legs: number
+          player2_legs: number
+          player1_elo_change: number
+          player2_elo_change: number
+          player1_avg: number
+          player2_avg: number
+          player1_one_eighties: number
+          player2_one_eighties: number
+          game_mode: '301' | '501' | 'cricket'
           legs_to_win: number
-          sets_to_win: number
-          winner_id: string | null
           is_ranked: boolean
-          status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
-          created_at: string
-          updated_at: string
+          highest_checkout: number
+          played_at: string
         }
         Insert: {
-          id?: string
-          game_mode: '301' | '501' | 'practice'
+          id: string
+          player1_id: string
+          player2_id: string
+          player1_name: string
+          player2_name: string
+          winner_id: string
+          winner_name: string
+          player1_legs?: number
+          player2_legs?: number
+          player1_elo_change?: number
+          player2_elo_change?: number
+          player1_avg?: number
+          player2_avg?: number
+          player1_one_eighties?: number
+          player2_one_eighties?: number
+          game_mode: '301' | '501' | 'cricket'
           legs_to_win?: number
-          sets_to_win?: number
-          winner_id?: string | null
           is_ranked?: boolean
-          status?: 'pending' | 'in_progress' | 'completed' | 'cancelled'
-          created_at?: string
-          updated_at?: string
+          highest_checkout?: number
+          played_at?: string
         }
         Update: {
           id?: string
-          game_mode?: '301' | '501' | 'practice'
+          player1_id?: string
+          player2_id?: string
+          player1_name?: string
+          player2_name?: string
+          winner_id?: string
+          winner_name?: string
+          player1_legs?: number
+          player2_legs?: number
+          player1_elo_change?: number
+          player2_elo_change?: number
+          player1_avg?: number
+          player2_avg?: number
+          player1_one_eighties?: number
+          player2_one_eighties?: number
+          game_mode?: '301' | '501' | 'cricket'
           legs_to_win?: number
-          sets_to_win?: number
-          winner_id?: string | null
           is_ranked?: boolean
-          status?: 'pending' | 'in_progress' | 'completed' | 'cancelled'
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      match_players: {
-        Row: {
-          id: string
-          match_id: string
-          player_id: string
-          player_order: number
-          legs_won: number
-          sets_won: number
-          elo_before: number
-          elo_after: number | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          match_id: string
-          player_id: string
-          player_order: number
-          legs_won?: number
-          sets_won?: number
-          elo_before: number
-          elo_after?: number | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          match_id?: string
-          player_id?: string
-          player_order?: number
-          legs_won?: number
-          sets_won?: number
-          elo_before?: number
-          elo_after?: number | null
-          created_at?: string
-        }
-      }
-      legs: {
-        Row: {
-          id: string
-          match_id: string
-          leg_number: number
-          set_number: number
-          starting_score: number
-          winner_id: string | null
-          status: 'in_progress' | 'completed'
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          match_id: string
-          leg_number: number
-          set_number?: number
-          starting_score: number
-          winner_id?: string | null
-          status?: 'in_progress' | 'completed'
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          match_id?: string
-          leg_number?: number
-          set_number?: number
-          starting_score?: number
-          winner_id?: string | null
-          status?: 'in_progress' | 'completed'
-          created_at?: string
-        }
-      }
-      turns: {
-        Row: {
-          id: string
-          leg_id: string
-          player_id: string
-          turn_number: number
-          throw_1: number | null
-          throw_2: number | null
-          throw_3: number | null
-          score: number
-          remaining: number
-          is_bust: boolean
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          leg_id: string
-          player_id: string
-          turn_number: number
-          throw_1?: number | null
-          throw_2?: number | null
-          throw_3?: number | null
-          score: number
-          remaining: number
-          is_bust?: boolean
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          leg_id?: string
-          player_id?: string
-          turn_number?: number
-          throw_1?: number | null
-          throw_2?: number | null
-          throw_3?: number | null
-          score?: number
-          remaining?: number
-          is_bust?: boolean
-          created_at?: string
-        }
-      }
-      tournaments: {
-        Row: {
-          id: string
-          name: string
-          format: 'single_elimination'
-          size: 4 | 8 | 16
-          status: 'registration' | 'in_progress' | 'completed'
-          winner_id: string | null
-          created_by: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          format?: 'single_elimination'
-          size: 4 | 8 | 16
-          status?: 'registration' | 'in_progress' | 'completed'
-          winner_id?: string | null
-          created_by: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          format?: 'single_elimination'
-          size?: 4 | 8 | 16
-          status?: 'registration' | 'in_progress' | 'completed'
-          winner_id?: string | null
-          created_by?: string
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      tournament_participants: {
-        Row: {
-          id: string
-          tournament_id: string
-          player_id: string
-          seed: number | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          tournament_id: string
-          player_id: string
-          seed?: number | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          tournament_id?: string
-          player_id?: string
-          seed?: number | null
-          created_at?: string
-        }
-      }
-      challenges: {
-        Row: {
-          id: string
-          challenger_id: string
-          challenged_id: string
-          game_mode: '301' | '501'
-          status: 'pending' | 'accepted' | 'declined' | 'expired'
-          message: string | null
-          created_at: string
-          expires_at: string
-        }
-        Insert: {
-          id?: string
-          challenger_id: string
-          challenged_id: string
-          game_mode: '301' | '501'
-          status?: 'pending' | 'accepted' | 'declined' | 'expired'
-          message?: string | null
-          created_at?: string
-          expires_at?: string
-        }
-        Update: {
-          id?: string
-          challenger_id?: string
-          challenged_id?: string
-          game_mode?: '301' | '501'
-          status?: 'pending' | 'accepted' | 'declined' | 'expired'
-          message?: string | null
-          created_at?: string
-          expires_at?: string
+          highest_checkout?: number
+          played_at?: string
         }
       }
     }
@@ -285,10 +162,5 @@ export interface Database {
 }
 
 // Convenience types
-export type User = Database['public']['Tables']['users']['Row']
-export type Match = Database['public']['Tables']['matches']['Row']
-export type MatchPlayer = Database['public']['Tables']['match_players']['Row']
-export type Leg = Database['public']['Tables']['legs']['Row']
-export type Turn = Database['public']['Tables']['turns']['Row']
-export type Tournament = Database['public']['Tables']['tournaments']['Row']
-export type Challenge = Database['public']['Tables']['challenges']['Row']
+export type DbPlayer = Database['public']['Tables']['players']['Row']
+export type DbMatch = Database['public']['Tables']['matches']['Row']

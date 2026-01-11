@@ -2,8 +2,8 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getPlayer, type Player } from "@/lib/players";
-import { saveMatch } from "@/lib/matches";
+import { useData } from "@/context/DataContext";
+import type { Player } from "@/lib/supabase-data";
 
 // Cricket numbers: 20, 19, 18, 17, 16, 15, Bull
 const CRICKET_NUMBERS = [20, 19, 18, 17, 16, 15, 25] as const;
@@ -22,8 +22,9 @@ type TurnHit = { number: CricketNumber; multiplier: number } | { number: null; m
 function CricketGameContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { getPlayer, saveMatch, loading: dataLoading } = useData();
 
-  const [players, setPlayers] = useState<PlayerState[]>([]);
+  const [cricketPlayers, setCricketPlayers] = useState<PlayerState[]>([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [dartsThrown, setDartsThrown] = useState(0);
   const [currentTurnHits, setCurrentTurnHits] = useState<TurnHit[]>([]);
@@ -42,6 +43,8 @@ function CricketGameContent() {
   ];
 
   useEffect(() => {
+    if (dataLoading) return;
+
     const playerIds = searchParams.get("players")?.split(",") || [];
 
     const loadedPlayers: PlayerState[] = [];
@@ -58,11 +61,11 @@ function CricketGameContent() {
     });
 
     if (loadedPlayers.length >= 2) {
-      setPlayers(loadedPlayers);
+      setCricketPlayers(loadedPlayers);
     }
-  }, [searchParams]);
+  }, [searchParams, getPlayer, dataLoading]);
 
-  const currentPlayer = players[currentPlayerIndex];
+  const currentPlayer = cricketPlayers[currentPlayerIndex];
 
   // Check if a player has closed all numbers
   const hasClosedAll = (playerState: PlayerState) => {
@@ -71,14 +74,14 @@ function CricketGameContent() {
 
   // Check if a number is closed by all players
   const isClosedByAll = (number: CricketNumber) => {
-    return players.every((p) => p.marks[number] >= 3);
+    return cricketPlayers.every((p) => p.marks[number] >= 3);
   };
 
   // Handle hitting a number
   const hitNumber = (number: CricketNumber, multiplier: 1 | 2 | 3) => {
     if (gameOver || dartsThrown >= 3) return;
 
-    const newPlayers = [...players];
+    const newPlayers = [...cricketPlayers];
     const player = newPlayers[currentPlayerIndex];
     const currentMarks = player.marks[number];
     const marksToAdd = multiplier;
@@ -100,7 +103,7 @@ function CricketGameContent() {
     // Track this hit for the turn
     setCurrentTurnHits([...currentTurnHits, { number, multiplier }]);
     setDartsThrown(dartsThrown + 1);
-    setPlayers(newPlayers);
+    setCricketPlayers(newPlayers);
     setSelectedNumber(null);
 
     // Check for winner
@@ -125,7 +128,7 @@ function CricketGameContent() {
 
   // End turn
   const endTurn = () => {
-    setCurrentPlayerIndex((currentPlayerIndex + 1) % players.length);
+    setCurrentPlayerIndex((currentPlayerIndex + 1) % cricketPlayers.length);
     setDartsThrown(0);
     setCurrentTurnHits([]);
   };
@@ -135,7 +138,7 @@ function CricketGameContent() {
     if (currentTurnHits.length === 0) return;
 
     const lastHit = currentTurnHits[currentTurnHits.length - 1];
-    const newPlayers = [...players];
+    const newPlayers = [...cricketPlayers];
     const player = newPlayers[currentPlayerIndex];
 
     if (lastHit.number !== null) {
@@ -152,7 +155,7 @@ function CricketGameContent() {
       }
 
       player.marks[lastHit.number] = newMarks;
-      setPlayers(newPlayers);
+      setCricketPlayers(newPlayers);
     }
 
     setCurrentTurnHits(currentTurnHits.slice(0, -1));
@@ -162,35 +165,29 @@ function CricketGameContent() {
   };
 
   // End game and save
-  const finishGame = () => {
+  const finishGame = async () => {
     if (!winner) return;
 
     // Find the winner's full state
-    const winnerState = players.find((p) => p.player.id === winner.id);
+    const winnerState = cricketPlayers.find((p) => p.player.id === winner.id);
     if (!winnerState) return;
 
     // Save match result
-    saveMatch({
-      player1Id: players[0].player.id,
-      player2Id: players[1]?.player.id || "",
-      player1Name: players[0].player.name,
-      player2Name: players[1]?.player.name || "",
+    await saveMatch({
+      player1Id: cricketPlayers[0].player.id,
+      player2Id: cricketPlayers[1]?.player.id || "",
+      player1Name: cricketPlayers[0].player.name,
+      player2Name: cricketPlayers[1]?.player.name || "",
       winnerId: winner.id,
       winnerName: winner.name,
-      player1Legs: players[0].player.id === winner.id ? 1 : 0,
-      player2Legs: players[1]?.player.id === winner.id ? 1 : 0,
+      player1Legs: cricketPlayers[0].player.id === winner.id ? 1 : 0,
+      player2Legs: cricketPlayers[1]?.player.id === winner.id ? 1 : 0,
       player1EloChange: 0,
       player2EloChange: 0,
       player1Avg: 0,
       player2Avg: 0,
       player1OneEighties: 0,
       player2OneEighties: 0,
-      players: players.map((p) => ({
-        id: p.player.id,
-        name: p.player.name,
-        legs: p.player.id === winner.id ? 1 : 0,
-        avg: 0,
-      })),
       gameMode: "cricket",
       legsToWin: 1,
       isRanked: false,
@@ -208,7 +205,7 @@ function CricketGameContent() {
     return <span className="text-[#4ade80]">⊗</span>;
   };
 
-  if (players.length < 2) {
+  if (cricketPlayers.length < 2) {
     return (
       <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
         <p className="text-white">Loading...</p>
@@ -245,7 +242,7 @@ function CricketGameContent() {
 
       {/* Player Scores */}
       <div className="flex border-b border-[#333]">
-        {players.map((p, index) => (
+        {cricketPlayers.map((p, index) => (
           <div
             key={p.player.id}
             className={`flex-1 p-3 text-center ${
@@ -277,7 +274,7 @@ function CricketGameContent() {
             {CRICKET_NUMBERS.map((num) => (
               <tr key={num} className="border-b border-[#333]">
                 {/* Left player marks */}
-                {players.slice(0, Math.ceil(players.length / 2)).map((p) => (
+                {cricketPlayers.slice(0, Math.ceil(cricketPlayers.length / 2)).map((p) => (
                   <td
                     key={`${p.player.id}-${num}`}
                     className="py-3 px-4 text-center text-xl"
@@ -306,7 +303,7 @@ function CricketGameContent() {
                 </td>
 
                 {/* Right player marks */}
-                {players.slice(Math.ceil(players.length / 2)).map((p) => (
+                {cricketPlayers.slice(Math.ceil(cricketPlayers.length / 2)).map((p) => (
                   <td
                     key={`${p.player.id}-${num}`}
                     className="py-3 px-4 text-center text-xl"
@@ -401,7 +398,7 @@ function CricketGameContent() {
               {winner.name} Wins!
             </h2>
             <p className="text-slate-400 mb-6">
-              {players.find((p) => p.player.id === winner.id)?.points} points
+              {cricketPlayers.find((p) => p.player.id === winner.id)?.points} points
             </p>
             <div className="grid grid-cols-2 gap-3">
               <button
