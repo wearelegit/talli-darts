@@ -242,8 +242,10 @@ function GameContent() {
 
     const winner = game.players[winnerIndex];
     const allPlayerNames = game.players.map(p => p.name).join(', ');
+    const playerCount = game.players.length;
 
-    if (game.players.length === 2) {
+    if (playerCount === 2) {
+      // Standard 2-player practice match
       await saveMatch({
         player1Id: game.players[0].id,
         player2Id: game.players[1].id,
@@ -266,7 +268,7 @@ function GameContent() {
         playerCount: 2,
       });
     } else {
-      // Multi-player match - store all player names
+      // Multi-player match (3+ players) - store all player names
       const otherPlayers = game.players.filter((_, i) => i !== winnerIndex);
       await saveMatch({
         player1Id: winner.id,
@@ -287,7 +289,7 @@ function GameContent() {
         player1OneEighties: 0,
         player2OneEighties: 0,
         highestCheckout: 0,
-        playerCount: game.players.length,
+        playerCount: playerCount,
         allPlayerNames: allPlayerNames,
       });
     }
