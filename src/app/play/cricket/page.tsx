@@ -16,6 +16,9 @@ interface PlayerState {
   color: string;
 }
 
+// Type for tracking hits (including misses where number is null)
+type TurnHit = { number: CricketNumber; multiplier: number } | { number: null; multiplier: 0 };
+
 function CricketGameContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -23,9 +26,7 @@ function CricketGameContent() {
   const [players, setPlayers] = useState<PlayerState[]>([]);
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [dartsThrown, setDartsThrown] = useState(0);
-  const [currentTurnHits, setCurrentTurnHits] = useState<
-    { number: CricketNumber; multiplier: number }[]
-  >([]);
+  const [currentTurnHits, setCurrentTurnHits] = useState<TurnHit[]>([]);
   const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState<Player | null>(null);
   const [showConfirmQuit, setShowConfirmQuit] = useState(false);
@@ -119,7 +120,7 @@ function CricketGameContent() {
   const miss = () => {
     if (gameOver || dartsThrown >= 3) return;
     setDartsThrown(dartsThrown + 1);
-    setCurrentTurnHits([...currentTurnHits, { number: 0 as CricketNumber, multiplier: 0 }]);
+    setCurrentTurnHits([...currentTurnHits, { number: null, multiplier: 0 }]);
   };
 
   // End turn
@@ -137,7 +138,7 @@ function CricketGameContent() {
     const newPlayers = [...players];
     const player = newPlayers[currentPlayerIndex];
 
-    if (lastHit.number !== 0) {
+    if (lastHit.number !== null) {
       // Reverse the marks and points
       const prevMarks = player.marks[lastHit.number];
       const newMarks = Math.max(0, prevMarks - lastHit.multiplier);

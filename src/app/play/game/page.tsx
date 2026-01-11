@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getCheckoutSuggestion } from "@/lib/darts";
 import { calculateNewElo } from "@/lib/elo";
@@ -35,7 +35,7 @@ interface GameState {
   currentLeg: number;
 }
 
-export default function Game() {
+function GameContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -880,5 +880,19 @@ export default function Game() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Game() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
+          <p className="text-white">Loading...</p>
+        </div>
+      }
+    >
+      <GameContent />
+    </Suspense>
   );
 }
