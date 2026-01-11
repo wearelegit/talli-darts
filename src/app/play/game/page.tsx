@@ -65,7 +65,8 @@ function GameContent() {
   const [editThrowValue, setEditThrowValue] = useState("");
 
   useEffect(() => {
-    if (dataLoading) return;
+    // Only initialize the game once - don't re-run when player data updates
+    if (dataLoading || game) return;
 
     let playerIds: string[] = [];
 
@@ -114,7 +115,8 @@ function GameContent() {
       pendingLegWin: null,
       currentLeg: 1,
     });
-  }, [p1Id, p2Id, playersParam, mode, legsToWin, isRanked, startingScore, router, getPlayer, dataLoading]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataLoading]);
 
   if (!game) {
     return (
