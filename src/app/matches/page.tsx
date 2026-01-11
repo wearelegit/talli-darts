@@ -253,6 +253,13 @@ export default function Matches() {
                       )}
                     </div>
                   </div>
+                  {/* Show checkout if recorded */}
+                  {match.highestCheckout > 0 && (
+                    <div className="mt-2 pt-2 border-t border-[#333] flex items-center justify-center gap-2">
+                      <span className="text-slate-500 text-xs">Checkout:</span>
+                      <span className="text-[#4ade80] font-bold">{match.highestCheckout}</span>
+                    </div>
+                  )}
                 </div>
               );
             })}
