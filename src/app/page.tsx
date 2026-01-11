@@ -54,6 +54,7 @@ export default function Home() {
       <div className="text-center py-6">
         <h1 className="text-4xl font-bold text-white">Talli Darts</h1>
         <p className="text-slate-400 mt-1">ELO Tracker</p>
+        <p className="text-slate-600 text-xs mt-1">v2.1</p>
       </div>
 
       {/* Match Type Buttons */}
