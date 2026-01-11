@@ -7,12 +7,17 @@ import type { Player } from "@/lib/supabase-data";
 
 interface Stats {
   totalMatches: number;
+  rankedMatches: number;
+  practiceMatches: number;
   totalLegs: number;
+  rankedLegs: number;
+  practiceLegs: number;
   total180s: number;
   mostWins: Player | null;
   highest180s: Player | null;
   highestElo: Player | null;
   biggestRivalry: { player1: string; player2: string; matches: number } | null;
+  practiceMostPlayed: { name: string; count: number } | null;
 }
 
 export default function StatsPage() {
@@ -20,9 +25,17 @@ export default function StatsPage() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const stats: Stats = useMemo(() => {
+    // Separate ranked and practice matches
+    const rankedMatchesList = matches.filter(m => m.isRanked);
+    const practiceMatchesList = matches.filter(m => !m.isRanked);
+
     // Calculate stats
     const totalMatches = matches.length;
+    const rankedMatches = rankedMatchesList.length;
+    const practiceMatches = practiceMatchesList.length;
     const totalLegs = matches.reduce((sum, m) => sum + m.player1Legs + m.player2Legs, 0);
+    const rankedLegs = rankedMatchesList.reduce((sum, m) => sum + m.player1Legs + m.player2Legs, 0);
+    const practiceLegs = practiceMatchesList.reduce((sum, m) => sum + m.player1Legs + m.player2Legs, 0);
     const total180s = players.reduce((sum, p) => sum + p.oneEighties, 0);
 
     // Find leaders
@@ -30,9 +43,9 @@ export default function StatsPage() {
     const sortedBy180s = [...players].sort((a, b) => b.oneEighties - a.oneEighties);
     const sortedByElo = [...players].sort((a, b) => b.elo - a.elo);
 
-    // Find biggest rivalry
+    // Find biggest rivalry (ranked matches only)
     const rivalries: Record<string, number> = {};
-    matches.forEach((match) => {
+    rankedMatchesList.forEach((match) => {
       const key = [match.player1Name, match.player2Name].sort().join(" vs ");
       rivalries[key] = (rivalries[key] || 0) + 1;
     });
@@ -47,14 +60,35 @@ export default function StatsPage() {
       }
     });
 
+    // Find who plays practice matches most
+    const practicePlayerCount: Record<string, number> = {};
+    practiceMatchesList.forEach((match) => {
+      practicePlayerCount[match.player1Name] = (practicePlayerCount[match.player1Name] || 0) + 1;
+      practicePlayerCount[match.player2Name] = (practicePlayerCount[match.player2Name] || 0) + 1;
+    });
+
+    let practiceMostPlayed: { name: string; count: number } | null = null;
+    let maxPractice = 0;
+    Object.entries(practicePlayerCount).forEach(([name, count]) => {
+      if (count > maxPractice) {
+        maxPractice = count;
+        practiceMostPlayed = { name, count };
+      }
+    });
+
     return {
       totalMatches,
+      rankedMatches,
+      practiceMatches,
       totalLegs,
+      rankedLegs,
+      practiceLegs,
       total180s,
       mostWins: sortedByWins[0]?.wins > 0 ? sortedByWins[0] : null,
       highest180s: sortedBy180s[0]?.oneEighties > 0 ? sortedBy180s[0] : null,
       highestElo: sortedByElo[0] || null,
       biggestRivalry: maxMatches > 1 ? biggestRivalry : null,
+      practiceMostPlayed: maxPractice > 0 ? practiceMostPlayed : null,
     };
   }, [players, matches]);
 
@@ -95,9 +129,23 @@ export default function StatsPage() {
       <div className="px-4 space-y-4">
         {/* Overall Stats */}
         <div className="grid grid-cols-3 gap-3">
-          <StatCard label="Matches" value={stats.totalMatches} />
-          <StatCard label="Legs" value={stats.totalLegs} />
+          <StatCard label="Total Matches" value={stats.totalMatches} />
+          <StatCard label="Total Legs" value={stats.totalLegs} />
           <StatCard label="180s" value={stats.total180s} />
+        </div>
+
+        {/* Ranked vs Practice breakdown */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-[#2a2a2a] rounded-xl p-4">
+            <p className="text-[#4ade80] text-sm font-medium">Ranked</p>
+            <p className="text-white text-xl font-bold">{stats.rankedMatches} matches</p>
+            <p className="text-slate-500 text-xs">{stats.rankedLegs} legs played</p>
+          </div>
+          <div className="bg-[#2a2a2a] rounded-xl p-4">
+            <p className="text-[#f5a623] text-sm font-medium">Practice</p>
+            <p className="text-white text-xl font-bold">{stats.practiceMatches} matches</p>
+            <p className="text-slate-500 text-xs">{stats.practiceLegs} legs played</p>
+          </div>
         </div>
 
         {/* Leaders */}
@@ -140,7 +188,17 @@ export default function StatsPage() {
               <p className="text-white font-semibold">
                 {stats.biggestRivalry.player1} vs {stats.biggestRivalry.player2}
               </p>
-              <p className="text-slate-500 text-sm">{stats.biggestRivalry.matches} matches</p>
+              <p className="text-slate-500 text-sm">{stats.biggestRivalry.matches} ranked matches</p>
+            </div>
+          )}
+
+          {stats.practiceMostPlayed && (
+            <div className="bg-[#2a2a2a] rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <p className="text-[#f5a623] text-sm">Practice Champion</p>
+                <p className="text-white font-semibold">{stats.practiceMostPlayed.name}</p>
+              </div>
+              <span className="text-white text-xl font-bold">{stats.practiceMostPlayed.count} games</span>
             </div>
           )}
         </div>
