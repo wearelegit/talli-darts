@@ -180,16 +180,16 @@ export default function MatchDetail() {
         <div className="bg-[#2a2a2a] rounded-2xl p-6">
           <div className="flex items-center justify-between">
             {/* Player 1 */}
-            <div className="flex-1 text-center">
+            <Link href={`/players/${match.player1Id}`} className="flex-1 text-center group">
               <div
-                className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl font-bold mb-2 ${
+                className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl font-bold mb-2 group-hover:ring-2 group-hover:ring-[#4ade80] transition-all ${
                   player1Won ? "bg-[#e85d3b]" : "bg-[#444]"
                 }`}
               >
                 {match.player1Name.charAt(0)}
               </div>
               <p
-                className={`font-semibold ${
+                className={`font-semibold group-hover:text-[#4ade80] transition-colors ${
                   player1Won ? "text-white" : "text-slate-400"
                 }`}
               >
@@ -210,7 +210,7 @@ export default function MatchDetail() {
                   {match.player1EloChange.toFixed(2)}
                 </p>
               )}
-            </div>
+            </Link>
 
             {/* Score */}
             <div className="px-4">
@@ -223,16 +223,16 @@ export default function MatchDetail() {
             </div>
 
             {/* Player 2 */}
-            <div className="flex-1 text-center">
+            <Link href={`/players/${match.player2Id}`} className="flex-1 text-center group">
               <div
-                className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl font-bold mb-2 ${
+                className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-2xl font-bold mb-2 group-hover:ring-2 group-hover:ring-[#4ade80] transition-all ${
                   !player1Won ? "bg-[#f5a623]" : "bg-[#444]"
                 }`}
               >
                 {match.player2Name.charAt(0)}
               </div>
               <p
-                className={`font-semibold ${
+                className={`font-semibold group-hover:text-[#4ade80] transition-colors ${
                   !player1Won ? "text-white" : "text-slate-400"
                 }`}
               >
@@ -253,7 +253,7 @@ export default function MatchDetail() {
                   {match.player2EloChange.toFixed(2)}
                 </p>
               )}
-            </div>
+            </Link>
           </div>
         </div>
       </div>

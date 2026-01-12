@@ -200,9 +200,10 @@ export default function Home() {
             <p className="text-slate-500 text-center py-4">No players yet</p>
           ) : (
             topPlayers.map((player, index) => (
-              <div
+              <Link
                 key={player.id}
-                className="flex items-center px-4 py-3 border-b border-[#333] last:border-b-0"
+                href={`/players/${player.id}`}
+                className="flex items-center px-4 py-3 border-b border-[#333] last:border-b-0 hover:bg-[#333] transition-colors"
               >
                 <span
                   className={`w-6 text-center font-bold ${
@@ -229,7 +230,7 @@ export default function Home() {
                   {getWins(player)}W - {getLosses(player)}L
                 </span>
                 <span className="text-[#4ade80] font-semibold">{getElo(player).toFixed(2)}</span>
-              </div>
+              </Link>
             ))
           )}
         </div>
