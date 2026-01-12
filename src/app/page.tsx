@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useData } from "@/context/DataContext";
+import type { Player } from "@/lib/supabase-data";
+
+type RankingType = "overall" | "301" | "501";
 
 // Calculate average ELO from 301 and 501 ratings
 const getAverageElo = (player: { elo301: number; elo501: number }) => {
@@ -24,8 +27,53 @@ const getWeekStart = () => {
 
 export default function Home() {
   const { players, matches, loading } = useData();
+  const [rankingType, setRankingType] = useState<RankingType>("overall");
 
-  const topPlayers = [...players].sort((a, b) => getAverageElo(b) - getAverageElo(a)).slice(0, 5);
+  const getElo = (player: Player) => {
+    switch (rankingType) {
+      case "301":
+        return player.elo301;
+      case "501":
+        return player.elo501;
+      default:
+        return getAverageElo(player);
+    }
+  };
+
+  const getWins = (player: Player) => {
+    switch (rankingType) {
+      case "301":
+        return player.wins301;
+      case "501":
+        return player.wins501;
+      default:
+        return player.wins;
+    }
+  };
+
+  const getLosses = (player: Player) => {
+    switch (rankingType) {
+      case "301":
+        return player.losses301;
+      case "501":
+        return player.losses501;
+      default:
+        return player.losses;
+    }
+  };
+
+  const topPlayers = useMemo(() => {
+    const sorted = [...players];
+    switch (rankingType) {
+      case "301":
+        return sorted.sort((a, b) => b.elo301 - a.elo301).slice(0, 5);
+      case "501":
+        return sorted.sort((a, b) => b.elo501 - a.elo501).slice(0, 5);
+      default:
+        return sorted.sort((a, b) => getAverageElo(b) - getAverageElo(a)).slice(0, 5);
+    }
+  }, [players, rankingType]);
+
   const recentMatches = matches.slice(0, 5);
 
   // Get weekly highest checkouts - now includes both players' checkouts separately
@@ -114,6 +162,39 @@ export default function Home() {
             See all
           </Link>
         </div>
+        {/* Ranking Type Tabs */}
+        <div className="grid grid-cols-3 gap-2 bg-[#2a2a2a] rounded-xl p-1 mb-3">
+          <button
+            onClick={() => setRankingType("overall")}
+            className={`py-2 rounded-lg text-sm font-semibold transition-colors ${
+              rankingType === "overall"
+                ? "bg-[#4ade80] text-black"
+                : "text-white hover:bg-[#333]"
+            }`}
+          >
+            Overall
+          </button>
+          <button
+            onClick={() => setRankingType("301")}
+            className={`py-2 rounded-lg text-sm font-semibold transition-colors ${
+              rankingType === "301"
+                ? "bg-[#4ade80] text-black"
+                : "text-white hover:bg-[#333]"
+            }`}
+          >
+            301
+          </button>
+          <button
+            onClick={() => setRankingType("501")}
+            className={`py-2 rounded-lg text-sm font-semibold transition-colors ${
+              rankingType === "501"
+                ? "bg-[#4ade80] text-black"
+                : "text-white hover:bg-[#333]"
+            }`}
+          >
+            501
+          </button>
+        </div>
         <div className="bg-[#2a2a2a] rounded-xl overflow-hidden">
           {topPlayers.length === 0 ? (
             <p className="text-slate-500 text-center py-4">No players yet</p>
@@ -145,9 +226,9 @@ export default function Home() {
                   )}
                 </div>
                 <span className="text-slate-400 text-sm mr-4">
-                  {player.wins}W - {player.losses}L
+                  {getWins(player)}W - {getLosses(player)}L
                 </span>
-                <span className="text-[#4ade80] font-semibold">{getAverageElo(player).toFixed(0)}</span>
+                <span className="text-[#4ade80] font-semibold">{getElo(player).toFixed(0)}</span>
               </div>
             ))
           )}
