@@ -692,16 +692,19 @@ function GameContent() {
       {showThrowsHistory && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
           <div className="bg-[#2a2a2a] rounded-2xl w-full max-w-md max-h-[80vh] flex flex-col">
-            <div className="p-4 border-b border-[#333] flex items-center justify-between">
-              <h3 className="text-white font-bold text-lg">All Throws</h3>
-              <button
-                onClick={() => setShowThrowsHistory(false)}
-                className="text-slate-400 hover:text-white p-1"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            <div className="p-4 border-b border-[#333]">
+              <div className="flex items-center justify-between">
+                <h3 className="text-white font-bold text-lg">All Throws</h3>
+                <button
+                  onClick={() => setShowThrowsHistory(false)}
+                  className="text-slate-400 hover:text-white p-1"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-slate-400 text-sm mt-1">Tap a score to edit it</p>
             </div>
             <div className="flex-1 overflow-auto p-4">
               {game.players.map((player, playerIndex) => (
