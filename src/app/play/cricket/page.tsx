@@ -184,6 +184,8 @@ function CricketGameContent() {
       player2Legs: cricketPlayers[1]?.player.id === winner.id ? 1 : 0,
       player1EloChange: 0,
       player2EloChange: 0,
+      player1EloStart: cricketPlayers[0].player.elo,
+      player2EloStart: cricketPlayers[1]?.player.elo || 1000,
       player1Avg: 0,
       player2Avg: 0,
       player1OneEighties: 0,
