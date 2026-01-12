@@ -169,7 +169,7 @@ export default function Matches() {
                 : match.player2Name;
 
               return (
-                <div key={match.id} className="bg-[#2a2a2a] rounded-xl p-4">
+                <Link key={match.id} href={`/matches/${match.id}`} className="block bg-[#2a2a2a] rounded-xl p-4 hover:bg-[#333] transition-colors">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className="text-slate-500 text-sm">{match.gameMode}</span>
@@ -187,7 +187,11 @@ export default function Matches() {
                     <div className="flex items-center gap-2">
                       <span className="text-slate-500 text-sm">{formatDate(match.playedAt)}</span>
                       <button
-                        onClick={() => openEditModal(match)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          openEditModal(match);
+                        }}
                         className="text-slate-400 hover:text-white p-1"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -273,7 +277,7 @@ export default function Matches() {
                       </div>
                     </div>
                   )}
-                </div>
+                </Link>
               );
             })}
           </div>
